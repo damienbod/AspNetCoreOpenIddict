@@ -1,0 +1,49 @@
+﻿@page
+@using System.Buffers.Text
+@using IdentityProvider
+@using IdentityProvider.Areas.Identity
+@using IdentityProvider.Areas.Identity.Pages
+@using IdentityProvider.Areas.Identity.Pages.Account
+@using IdentityProvider.Data
+@using IdentityProvider.Passkeys
+@model IdentityProvider.Areas.Identity.Pages.Account.PasskeysModel
+@{
+    ViewData["Title"] = "Manage your passkeys";
+}
+
+<partial name="_StatusMessage" for="StatusMessage" />
+<h3>@ViewData["Title"]</h3>
+
+@if (Model.CurrentPasskeys?.Count > 0)
+{
+        <table class="table">
+        <tbody>
+        @foreach (var passkey in Model.CurrentPasskeys)
+        {
+            var credentialId = Base64Url.EncodeToString(passkey.CredentialId);
+            <tr>
+                <td class="align-middle">@(passkey.Name ?? "Unnamed passkey")</td>
+                <td class="align-middle">
+                    <form asp-page-handler="UpdatePasskey" method="post">
+                        <input type="hidden" name="Input.CredentialId" value="@credentialId"/>
+                        <button type="submit" name="Input.Action" value="rename" class="btn btn-primary" title="Rename this passkey">Rename</button>
+                        <button type="submit" name="Input.Action" value="delete" class="btn btn-danger" title="Remove this passkey from your account">Remove</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+        </table>
+}
+else
+{
+    <p>No passkeys are registered.</p>
+}
+
+<form asp-page-handler="AddPasskey" method="post" class="mt-2">
+    <passkey-submit operation="@PasskeyOperation.Create" name="Input.Passkey" class="btn btn-primary">Add a new passkey</passkey-submit>
+</form>
+
+@section Scripts {
+    <script src="~/js/passkey-submit.js" asp-append-version="true"></script>
+}

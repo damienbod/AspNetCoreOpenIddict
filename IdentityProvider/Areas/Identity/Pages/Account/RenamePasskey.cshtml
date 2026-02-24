@@ -1,0 +1,34 @@
+﻿@page
+@model IdentityProvider.Areas.Identity.Pages.Account.RenamePasskeyModel
+@{
+    ViewData["Title"] = "Rename passkey";
+}
+
+<partial name="_StatusMessage" for="StatusMessage" />
+
+@if (Model.Input?.Name is { } name)
+{
+    <h4>Enter a new name for your "@name" passkey</h4>
+}
+else
+{
+    <h4>Enter a name for your passkey</h4>
+}
+
+<form method="post">
+    <input asp-for="Input.CredentialId" type="hidden" />
+    <div class="mb-3">
+        <label asp-for="Input.Name" autocomplete="none" autofocus></label>
+        <input asp-for="Input.Name" class="form-control"/>
+        <span asp-validation-for="Input.Name" class="text-danger"></span>
+    </div>
+    <div>
+        <button type="submit" class="btn btn-primary">Rename</button>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        $('#Input_Name').focus();
+    </script>
+}
