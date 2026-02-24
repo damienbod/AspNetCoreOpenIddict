@@ -5,7 +5,7 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateBootstrapLogger();
 
-Log.Information("Starting up OpeniddictServer");
+Log.Information("Starting up IdentityProvider");
 
 try
 {
