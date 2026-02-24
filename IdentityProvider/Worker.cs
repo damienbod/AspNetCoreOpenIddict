@@ -26,33 +26,104 @@ public class Worker : IHostedService
         {
             var manager = provider.GetRequiredService<IOpenIddictApplicationManager>();
 
-            //var dd = await manager.FindByClientIdAsync("oidc-pkce-confidential");
-
-            //await manager.DeleteAsync(dd);
-
-            // OIDC Code flow confidential client
-            if (await manager.FindByClientIdAsync("oidc-pkce-confidential") is null)
+            // Angular UI client
+            if (await manager.FindByClientIdAsync("angularclient") is null)
             {
                 await manager.CreateAsync(new OpenIddictApplicationDescriptor
                 {
-                    ClientId = "oidc-pkce-confidential",
+                    ClientId = "angularclient",
                     ConsentType = ConsentTypes.Explicit,
-                    DisplayName = "OIDC confidential Code Flow PKCE",
+                    DisplayName = "angular client PKCE",
                     DisplayNames =
                     {
                         [CultureInfo.GetCultureInfo("fr-FR")] = "Application cliente MVC"
                     },
                     PostLogoutRedirectUris =
                     {
-                        new Uri("https://localhost:5001/signout-callback-oidc"),
-                        new Uri("https://localhost:64265/signout-callback-oidc")
+                        new Uri("https://localhost:4200")
                     },
                     RedirectUris =
                     {
-                        new Uri("https://localhost:5001/signin-oidc"),
-                        new Uri("https://localhost:64265/signin-oidc"),
+                        new Uri("https://localhost:4200")
                     },
-                    ClientSecret = "oidc-pkce-confidential_secret",
+                    Permissions =
+                    {
+                        Permissions.Endpoints.Authorization,
+                        Permissions.Endpoints.EndSession,
+                        Permissions.Endpoints.Token,
+                        Permissions.Endpoints.Revocation,
+                        Permissions.GrantTypes.AuthorizationCode,
+                        Permissions.GrantTypes.RefreshToken,
+                        Permissions.ResponseTypes.Code,
+                        Permissions.Scopes.Email,
+                        Permissions.Scopes.Profile,
+                        Permissions.Scopes.Roles,
+                        Permissions.Prefixes.Scope + "dataEventRecords"
+                    },
+                    Requirements =
+                    {
+                        Requirements.Features.ProofKeyForCodeExchange
+                    }
+                });
+            }
+
+            // API application CC
+            if (await manager.FindByClientIdAsync("CC") == null)
+            {
+                await manager.CreateAsync(new OpenIddictApplicationDescriptor
+                {
+                    ClientId = "CC",
+                    ClientSecret = "cc_secret",
+                    DisplayName = "CC for protected API",
+                    Permissions =
+                {
+                    Permissions.Endpoints.Authorization,
+                    Permissions.Endpoints.Token,
+                    Permissions.GrantTypes.ClientCredentials,
+                    Permissions.Prefixes.Scope + "dataEventRecords"
+                }
+                });
+            }
+
+            // API
+            if (await manager.FindByClientIdAsync("rs_dataEventRecordsApi") == null)
+            {
+                var descriptor = new OpenIddictApplicationDescriptor
+                {
+                    ClientId = "rs_dataEventRecordsApi",
+                    ClientSecret = "dataEventRecordsSecret",
+                    Permissions =
+                    {
+                        Permissions.Endpoints.Introspection
+                    }
+                };
+
+                await manager.CreateAsync(descriptor);
+            }
+
+            // Blazor Hosted
+            if (await manager.FindByClientIdAsync("blazorcodeflowpkceclient") is null)
+            {
+                await manager.CreateAsync(new OpenIddictApplicationDescriptor
+                {
+                    ClientId = "blazorcodeflowpkceclient",
+                    ConsentType = ConsentTypes.Explicit,
+                    DisplayName = "Blazor code PKCE",
+                    DisplayNames =
+                    {
+                        [CultureInfo.GetCultureInfo("fr-FR")] = "Application cliente MVC"
+                    },
+                    PostLogoutRedirectUris =
+                    {
+                        new Uri("https://localhost:44348/signout-callback-oidc"),
+                        new Uri("https://localhost:5001/signout-callback-oidc")
+                    },
+                    RedirectUris =
+                    {
+                        new Uri("https://localhost:44348/signin-oidc"),
+                        new Uri("https://localhost:5001/signin-oidc")
+                    },
+                    ClientSecret = "codeflow_pkce_client_secret",
                     Permissions =
                     {
                         Permissions.Endpoints.Authorization,

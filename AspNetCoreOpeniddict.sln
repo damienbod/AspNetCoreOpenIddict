@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.32002.185
+# Visual Studio Version 18
+VisualStudioVersion = 18.2.11415.280 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpeniddictServer", "OpeniddictServer\OpeniddictServer.csproj", "{D12043A7-436F-4C60-AE8D-4A4D8EB6076C}"
 EndProject
@@ -34,6 +34,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GrpcAppClientConsole", "ClientCredentialsFlow\GrpcAppClientConsole\GrpcAppClientConsole.csproj", "{FE3573C8-F01C-4822-963C-CEAD63316A13}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GrpcApi", "ClientCredentialsFlow\GrpcApi\GrpcApi.csproj", "{96DFA6DC-D3C3-4C1F-B6D4-1939BBC7B069}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IdentityProvider", "IdentityProvider\IdentityProvider.csproj", "{89F1F671-7C9C-6E19-7889-627D78432F54}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -81,6 +83,10 @@ Global
 		{96DFA6DC-D3C3-4C1F-B6D4-1939BBC7B069}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{96DFA6DC-D3C3-4C1F-B6D4-1939BBC7B069}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{96DFA6DC-D3C3-4C1F-B6D4-1939BBC7B069}.Release|Any CPU.Build.0 = Release|Any CPU
+		{89F1F671-7C9C-6E19-7889-627D78432F54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{89F1F671-7C9C-6E19-7889-627D78432F54}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{89F1F671-7C9C-6E19-7889-627D78432F54}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{89F1F671-7C9C-6E19-7889-627D78432F54}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
