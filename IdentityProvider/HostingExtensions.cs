@@ -107,13 +107,13 @@ internal static class HostingExtensions
             {
                 options.SignInScheme = "Identity.External";
                 //Keycloak server
-                options.Authority = Configuration.GetSection("Keycloak")["ServerRealm"];
+                options.Authority = configuration.GetSection("Keycloak")["ServerRealm"];
                 //Keycloak client ID
-                options.ClientId = Configuration.GetSection("Keycloak")["ClientId"];
+                options.ClientId = configuration.GetSection("Keycloak")["ClientId"];
                 //Keycloak client secret in user secrets for dev
-                options.ClientSecret = Configuration.GetSection("Keycloak")["ClientSecret"];
+                options.ClientSecret = configuration.GetSection("Keycloak")["ClientSecret"];
                 //Keycloak .wellknown config origin to fetch config
-                options.MetadataAddress = Configuration.GetSection("Keycloak")["Metadata"];
+                options.MetadataAddress = configuration.GetSection("Keycloak")["Metadata"];
                 //Require keycloak to use SSL
 
                 options.GetClaimsFromUserInfoEndpoint = true;
@@ -136,9 +136,9 @@ internal static class HostingExtensions
                 oidcOptions.Scope.Add(OpenIdConnectScope.OpenIdProfile);
                 oidcOptions.Scope.Add("user.read");
                 oidcOptions.Scope.Add(OpenIdConnectScope.OfflineAccess);
-                oidcOptions.Authority = $"https://login.microsoftonline.com/{Configuration["AzureAd:TenantId"]}/v2.0/";
-                oidcOptions.ClientId = Configuration["AzureAd:ClientId"];
-                oidcOptions.ClientSecret = Configuration["AzureAd:ClientSecret"];
+                oidcOptions.Authority = $"https://login.microsoftonline.com/{configuration["AzureAd:TenantId"]}/v2.0/";
+                oidcOptions.ClientId = configuration["AzureAd:ClientId"];
+                oidcOptions.ClientSecret = configuration["AzureAd:ClientSecret"];
                 oidcOptions.ResponseType = OpenIdConnectResponseType.Code;
                 oidcOptions.MapInboundClaims = false;
                 oidcOptions.SaveTokens = true;

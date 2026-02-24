@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.2.11415.280 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpeniddictServer", "OpeniddictServer\OpeniddictServer.csproj", "{D12043A7-436F-4C60-AE8D-4A4D8EB6076C}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ResourceServer", "ResourceServer\ResourceServer.csproj", "{8206AB4E-E954-4A70-B85E-EE956A42A34E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_dev", "_dev", "{03B25853-92B2-4FAF-85FB-E68AA2F24B6F}"
@@ -43,10 +41,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{D12043A7-436F-4C60-AE8D-4A4D8EB6076C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D12043A7-436F-4C60-AE8D-4A4D8EB6076C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D12043A7-436F-4C60-AE8D-4A4D8EB6076C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D12043A7-436F-4C60-AE8D-4A4D8EB6076C}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8206AB4E-E954-4A70-B85E-EE956A42A34E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8206AB4E-E954-4A70-B85E-EE956A42A34E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8206AB4E-E954-4A70-B85E-EE956A42A34E}.Release|Any CPU.ActiveCfg = Release|Any CPU

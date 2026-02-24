@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace OpeniddictServer.Migrations
+namespace IdentityProvider.Migrations
 {
     /// <inheritdoc />
     public partial class UpdateNet10 : Migration

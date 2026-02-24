@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using OpeniddictServer.Data;
+using IdentityProvider.Data;
 
 #nullable disable
 
-namespace OpeniddictServer.Migrations
+namespace IdentityProvider.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     [Migration("20251129153838_UpdateNet10")]
