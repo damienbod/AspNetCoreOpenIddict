@@ -1,0 +1,243 @@
+using IdentityProvider.Data;
+using IdentityProvider.Passkeys;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Logging;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using Microsoft.IdentityModel.Tokens;
+using Quartz;
+using Serilog;
+using System.Configuration;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using static OpenIddict.Abstractions.OpenIddictConstants;
+
+namespace IdentityProvider;
+
+internal static class HostingExtensions
+{
+    public static WebApplication ConfigureServices(this WebApplicationBuilder builder)
+    {
+        var services = builder.Services;
+        var configuration = builder.Configuration;
+
+        services.AddControllersWithViews();
+        services.AddRazorPages();
+
+        services.AddHttpContextAccessor();
+
+        services.AddDbContext<ApplicationDbContext>(options =>
+        {
+            // Configure the context to use Microsoft SQL Server.
+            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
+
+            // Register the entity sets needed by OpenIddict.
+            // Note: use the generic overload if you need
+            // to replace the default OpenIddict entities.
+            options.UseOpenIddict();
+        });
+
+        services.AddDatabaseDeveloperPageExceptionFilter();
+
+        services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+        {
+            options.Stores.SchemaVersion = IdentitySchemaVersions.Version3;
+        })
+        .AddEntityFrameworkStores<ApplicationDbContext>()
+        .AddDefaultTokenProviders()
+        .AddDefaultUI();
+
+        services.AddDistributedMemoryCache();
+
+        services.AddSession(options =>
+        {
+            options.IdleTimeout = TimeSpan.FromMinutes(2);
+            options.Cookie.HttpOnly = true;
+            options.Cookie.SameSite = SameSiteMode.None;
+            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        });
+
+        services.Configure<IdentityOptions>(options =>
+        {
+            // Configure Identity to use the same JWT claims as OpenIddict instead
+            // of the legacy WS-Federation claims it uses by default (ClaimTypes),
+            // which saves you from doing the mapping in your authorization controller.
+            options.ClaimsIdentity.UserNameClaimType = Claims.Name;
+            options.ClaimsIdentity.UserIdClaimType = Claims.Subject;
+            options.ClaimsIdentity.RoleClaimType = Claims.Role;
+            options.ClaimsIdentity.EmailClaimType = Claims.Email;
+
+            // Note: to require account confirmation before login,
+            // register an email sender service (IEmailSender) and
+            // set options.SignIn.RequireConfirmedAccount to true.
+            //
+            // For more information, visit https://aka.ms/aspaccountconf.
+            options.SignIn.RequireConfirmedAccount = false;
+        });
+
+        // OpenIddict offers native integration with Quartz.NET to perform scheduled tasks
+        // (like pruning orphaned authorizations/tokens from the database) at regular intervals.
+        services.AddQuartz(options =>
+        {
+            options.UseSimpleTypeLoader();
+            options.UseInMemoryStore();
+        });
+
+        // Register the Quartz.NET service and configure it to block shutdown until jobs are complete.
+        services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
+
+        services.AddCors(options =>
+        {
+            options.AddPolicy("AllowAllOrigins",
+                builder =>
+                {
+                    builder
+                        .AllowCredentials()
+                        .WithOrigins(
+                            "https://localhost:4200", "https://localhost:4204")
+                        .SetIsOriginAllowedToAllowWildcardSubdomains()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                });
+        });
+
+        services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+            .AddOpenIdConnect("KeyCloak", "KeyCloak", options =>
+            {
+                options.SignInScheme = "Identity.External";
+                //Keycloak server
+                options.Authority = configuration.GetSection("Keycloak")["ServerRealm"];
+                //Keycloak client ID
+                options.ClientId = configuration.GetSection("Keycloak")["ClientId"];
+                //Keycloak client secret in user secrets for dev
+                options.ClientSecret = configuration.GetSection("Keycloak")["ClientSecret"];
+                //Keycloak .wellknown config origin to fetch config
+                options.MetadataAddress = configuration.GetSection("Keycloak")["Metadata"];
+                //Require keycloak to use SSL
+
+                options.GetClaimsFromUserInfoEndpoint = true;
+                options.Scope.Add("openid");
+                options.Scope.Add("profile");
+                options.SaveTokens = true;
+                options.ResponseType = OpenIdConnectResponseType.Code;
+                options.RequireHttpsMetadata = false; //dev
+
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    NameClaimType = "name",
+                    RoleClaimType = ClaimTypes.Role,
+                    ValidateIssuer = true
+                };
+            })
+            .AddOpenIdConnect("EntraID", "EntraID", oidcOptions =>
+            {
+                oidcOptions.SignInScheme = "entraidcookie";
+                oidcOptions.Scope.Add(OpenIdConnectScope.OpenIdProfile);
+                oidcOptions.Scope.Add("user.read");
+                oidcOptions.Scope.Add(OpenIdConnectScope.OfflineAccess);
+                oidcOptions.Authority = $"https://login.microsoftonline.com/{configuration["AzureAd:TenantId"]}/v2.0/";
+                oidcOptions.ClientId = configuration["AzureAd:ClientId"];
+                oidcOptions.ClientSecret = configuration["AzureAd:ClientSecret"];
+                oidcOptions.ResponseType = OpenIdConnectResponseType.Code;
+                oidcOptions.MapInboundClaims = false;
+                oidcOptions.SaveTokens = true;
+                oidcOptions.TokenValidationParameters.NameClaimType = JwtRegisteredClaimNames.Name;
+                oidcOptions.TokenValidationParameters.RoleClaimType = "role";
+            });
+
+
+        services.AddOpenIddict()
+            .AddCore(options =>
+            {
+                options.UseEntityFrameworkCore()
+                       .UseDbContext<ApplicationDbContext>();
+
+                options.UseQuartz();
+            })
+            .AddServer(options =>
+            {
+                // Enable the authorization, logout, token and userinfo endpoints.
+                options.SetAuthorizationEndpointUris("connect/authorize")
+                   //.SetDeviceEndpointUris("connect/device")
+                   .SetIntrospectionEndpointUris("connect/introspect")
+                   .SetEndSessionEndpointUris("connect/logout")
+                   .SetTokenEndpointUris("connect/token")
+                   .SetUserInfoEndpointUris("connect/userinfo")
+                   .SetEndUserVerificationEndpointUris("connect/verify");
+
+                options.AllowAuthorizationCodeFlow()
+                       .AllowHybridFlow()
+                       .AllowClientCredentialsFlow()
+                       .AllowRefreshTokenFlow();
+
+                options.RegisterScopes(Scopes.Email, Scopes.Profile, Scopes.Roles, "dataEventRecords");
+
+                options.AddDevelopmentEncryptionCertificate()
+                       .AddDevelopmentSigningCertificate();
+
+                options.UseAspNetCore()
+                       .EnableAuthorizationEndpointPassthrough()
+                       .EnableEndSessionEndpointPassthrough()
+                       .EnableTokenEndpointPassthrough()
+                       .EnableUserInfoEndpointPassthrough()
+                       .EnableStatusCodePagesIntegration();
+
+                options.DisableAccessTokenEncryption();
+            })
+            .AddValidation(options =>
+            {
+                options.UseLocalServer();
+                options.UseAspNetCore();
+            });
+
+        // Register the worker responsible of seeding the database.
+        // Note: in a real world application, this step should be part of a setup script.
+        services.AddHostedService<Worker>();
+
+        return builder.Build();
+    }
+
+    public static WebApplication ConfigurePipeline(this WebApplication app)
+    {
+        IdentityModelEventSource.ShowPII = true;
+        JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+
+        app.UseSerilogRequestLogging();
+
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseDeveloperExceptionPage();
+            app.UseMigrationsEndPoint();
+        }
+        else
+        {
+            app.UseStatusCodePagesWithReExecute("~/error");
+            //app.UseExceptionHandler("~/error");
+            //app.UseHsts();
+        }
+
+        app.UseHttpsRedirection();
+        app.UseStaticFiles();
+
+        app.UseCors("AllowAllOrigins");
+
+        app.UseRouting();
+
+        app.UseAuthentication();
+        app.UseAuthorization();
+        app.MapStaticAssets();
+        app.UseAntiforgery();
+
+        app.UseSession();
+
+        app.MapPasskeyEndpoints();
+
+        app.MapControllers();
+        app.MapDefaultControllerRoute();
+        app.MapRazorPages()
+            .WithStaticAssets();
+
+        return app;
+    }
+}

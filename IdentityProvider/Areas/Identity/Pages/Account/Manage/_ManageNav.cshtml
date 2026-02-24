@@ -1,0 +1,34 @@
+﻿@using IdentityProvider
+@using IdentityProvider.Areas.Identity
+@using IdentityProvider.Areas.Identity.Pages
+@using IdentityProvider.Areas.Identity.Pages.Account
+@using IdentityProvider.Areas.Identity.Pages.Account.Manage
+@using IdentityProvider.Data
+@using IdentityProvider.Passkeys
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@{
+    var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
+    var user = await UserManager.GetUserAsync(User);
+    var notEntraIDUserWithNoPassword = await UserManager.HasPasswordAsync(user!);
+}
+<ul class="nav nav-pills flex-column">
+    <li class="nav-item"><a class="nav-link @ManageNavPages.IndexNavClass(ViewContext)" id="profile" asp-page="/Account/Manage/Index">Profile</a></li>
+    @if (notEntraIDUserWithNoPassword)
+    {
+        <li class="nav-item"><a class="nav-link @ManageNavPages.EmailNavClass(ViewContext)" id="email" asp-page="/Account/Manage/Email">Email</a></li>
+        <li class="nav-item"><a class="nav-link @ManageNavPages.ChangePasswordNavClass(ViewContext)" id="change-password" asp-page="/Account/Manage/ChangePassword">Password</a></li>
+    }
+    @*  @if (hasExternalLogins) *@
+    @if (!notEntraIDUserWithNoPassword) // Add logic to allow update of users to Entra ID
+    {
+        <li id="external-logins" class="nav-item"><a id="external-login" class="nav-link @ManageNavPages.ExternalLoginsNavClass(ViewContext)" asp-page="/Account/Manage/ExternalLogins">External logins</a></li>
+    }
+    @if (notEntraIDUserWithNoPassword)
+    {
+        <li class="nav-item"><a class="nav-link @ManageNavPages.TwoFactorAuthenticationNavClass(ViewContext)" id="two-factor" asp-page="/Account/Manage/TwoFactorAuthentication">Two-factor authentication</a></li>
+    }
+
+    <li class="nav-item"><a class="nav-link @ManageNavPages.PersonalDataNavClass(ViewContext)" id="personal-data" asp-page="/Account/Manage/PersonalData">Personal data</a></li>
+</ul>

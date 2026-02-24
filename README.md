@@ -20,11 +20,11 @@
 
 ### Console
 
-dotnet ef migrations add initSts -c ApplicationDbContext
+dotnet ef migrations add InitOpenIddict -c ApplicationDbContext
 
 ### Powershell
 
-Add-Migration "init_sts" -c ApplicationDbContext  
+Add-Migration "InitOpenIddict" -c ApplicationDbContext  
 
 ## Running manually
 
@@ -32,6 +32,7 @@ Update-Database -Context ApplicationDbContext
 
 ## History
 
+- 2026-02-24 Updated .NET 10, updated passkeys in OpenIddict server, Angular 21.1.5
 - 2025-11-29 Updated .NET 10, Angular 21, Update Angular OIDC
 - 2025-05-13 Updated packages
 - 2025-04-30 Updated packages
