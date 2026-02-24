@@ -20,11 +20,11 @@
 
 ### Console
 
-dotnet ef migrations add initSts -c ApplicationDbContext
+dotnet ef migrations add InitOpenIddict -c ApplicationDbContext
 
 ### Powershell
 
-Add-Migration "init_sts" -c ApplicationDbContext  
+Add-Migration "InitOpenIddict" -c ApplicationDbContext  
 
 ## Running manually
 
