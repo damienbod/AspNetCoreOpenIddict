@@ -1,11 +1,16 @@
+using IdentityProvider.Data;
+using IdentityProvider.Passkeys;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Logging;
-using IdentityProvider.Data;
-using IdentityProvider.Passkeys;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using Microsoft.IdentityModel.Tokens;
 using Quartz;
 using Serilog;
+using System.Configuration;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace IdentityProvider;
@@ -82,64 +87,107 @@ internal static class HostingExtensions
         // Register the Quartz.NET service and configure it to block shutdown until jobs are complete.
         services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
 
-        services.AddOpenIddict()
+        services.AddCors(options =>
+        {
+            options.AddPolicy("AllowAllOrigins",
+                builder =>
+                {
+                    builder
+                        .AllowCredentials()
+                        .WithOrigins(
+                            "https://localhost:4200", "https://localhost:4204")
+                        .SetIsOriginAllowedToAllowWildcardSubdomains()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                });
+        });
 
-            // Register the OpenIddict core components.
+        services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+            .AddOpenIdConnect("KeyCloak", "KeyCloak", options =>
+            {
+                options.SignInScheme = "Identity.External";
+                //Keycloak server
+                options.Authority = Configuration.GetSection("Keycloak")["ServerRealm"];
+                //Keycloak client ID
+                options.ClientId = Configuration.GetSection("Keycloak")["ClientId"];
+                //Keycloak client secret in user secrets for dev
+                options.ClientSecret = Configuration.GetSection("Keycloak")["ClientSecret"];
+                //Keycloak .wellknown config origin to fetch config
+                options.MetadataAddress = Configuration.GetSection("Keycloak")["Metadata"];
+                //Require keycloak to use SSL
+
+                options.GetClaimsFromUserInfoEndpoint = true;
+                options.Scope.Add("openid");
+                options.Scope.Add("profile");
+                options.SaveTokens = true;
+                options.ResponseType = OpenIdConnectResponseType.Code;
+                options.RequireHttpsMetadata = false; //dev
+
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    NameClaimType = "name",
+                    RoleClaimType = ClaimTypes.Role,
+                    ValidateIssuer = true
+                };
+            })
+            .AddOpenIdConnect("EntraID", "EntraID", oidcOptions =>
+            {
+                oidcOptions.SignInScheme = "entraidcookie";
+                oidcOptions.Scope.Add(OpenIdConnectScope.OpenIdProfile);
+                oidcOptions.Scope.Add("user.read");
+                oidcOptions.Scope.Add(OpenIdConnectScope.OfflineAccess);
+                oidcOptions.Authority = $"https://login.microsoftonline.com/{Configuration["AzureAd:TenantId"]}/v2.0/";
+                oidcOptions.ClientId = Configuration["AzureAd:ClientId"];
+                oidcOptions.ClientSecret = Configuration["AzureAd:ClientSecret"];
+                oidcOptions.ResponseType = OpenIdConnectResponseType.Code;
+                oidcOptions.MapInboundClaims = false;
+                oidcOptions.SaveTokens = true;
+                oidcOptions.TokenValidationParameters.NameClaimType = JwtRegisteredClaimNames.Name;
+                oidcOptions.TokenValidationParameters.RoleClaimType = "role";
+            });
+
+
+        services.AddOpenIddict()
             .AddCore(options =>
             {
-                // Configure OpenIddict to use the Entity Framework Core stores and models.
-                // Note: call ReplaceDefaultEntities() to replace the default OpenIddict entities.
                 options.UseEntityFrameworkCore()
                        .UseDbContext<ApplicationDbContext>();
 
-                // Enable Quartz.NET integration.
                 options.UseQuartz();
             })
-
-            // Register the OpenIddict server components.
             .AddServer(options =>
             {
                 // Enable the authorization, logout, token and userinfo endpoints.
-                options.SetAuthorizationEndpointUris("/connect/authorize")
-                    .SetEndSessionEndpointUris("/connect/logout")
-                    .SetIntrospectionEndpointUris("/connect/introspect")
-                    .SetTokenEndpointUris("/connect/token")
-                    .SetUserInfoEndpointUris("/connect/userinfo")
-                    .SetEndUserVerificationEndpointUris("/connect/verify");
+                options.SetAuthorizationEndpointUris("connect/authorize")
+                   //.SetDeviceEndpointUris("connect/device")
+                   .SetIntrospectionEndpointUris("connect/introspect")
+                   .SetEndSessionEndpointUris("connect/logout")
+                   .SetTokenEndpointUris("connect/token")
+                   .SetUserInfoEndpointUris("connect/userinfo")
+                   .SetEndUserVerificationEndpointUris("connect/verify");
 
-                // Note: this sample uses the code, device code, password and refresh token flows, but you
-                // can enable the other flows if you need to support implicit or client credentials.
                 options.AllowAuthorizationCodeFlow()
-                       .AllowClientCredentialsFlow()
                        .AllowHybridFlow()
+                       .AllowClientCredentialsFlow()
                        .AllowRefreshTokenFlow();
 
-                // Mark the "email", "profile", "roles" and "dataEventRecords" scopes as supported scopes.
                 options.RegisterScopes(Scopes.Email, Scopes.Profile, Scopes.Roles, "dataEventRecords");
 
-                // remove this with introspection, added security
-                options.DisableAccessTokenEncryption();
-
-                // Register the signing and encryption credentials.
                 options.AddDevelopmentEncryptionCertificate()
                        .AddDevelopmentSigningCertificate();
 
-                // Register the ASP.NET Core host and configure the ASP.NET Core-specific options.
                 options.UseAspNetCore()
                        .EnableAuthorizationEndpointPassthrough()
                        .EnableEndSessionEndpointPassthrough()
                        .EnableTokenEndpointPassthrough()
                        .EnableUserInfoEndpointPassthrough()
                        .EnableStatusCodePagesIntegration();
-            })
 
-            // Register the OpenIddict validation components.
+                options.DisableAccessTokenEncryption();
+            })
             .AddValidation(options =>
             {
-                // Import the configuration from the local OpenIddict server instance.
                 options.UseLocalServer();
-
-                // Register the ASP.NET Core host.
                 options.UseAspNetCore();
             });
 
@@ -171,6 +219,9 @@ internal static class HostingExtensions
 
         app.UseHttpsRedirection();
         app.UseStaticFiles();
+
+        app.UseCors("AllowAllOrigins");
+
         app.UseRouting();
 
         app.UseAuthentication();
