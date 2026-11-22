@@ -1,0 +1,22 @@
+<Solution>
+  <Folder Name="/Blazor.BFF.OpenIddict/">
+    <Project Path="Blazor.BFF.OpenIddict/Client/Blazor.BFF.OpenIddict.Client.csproj" />
+    <Project Path="Blazor.BFF.OpenIddict/Server/Blazor.BFF.OpenIddict.Server.csproj" />
+    <Project Path="Blazor.BFF.OpenIddict/Shared/Blazor.BFF.OpenIddict.Shared.csproj" />
+  </Folder>
+  <Folder Name="/Blazor.BFF.Yarp.CertificateAuth/">
+    <Project Path="Blazor.BFF.Yarp.CertificateAuth/Client/Blazor.BFF.Yarp.CertificateAuth.Client.csproj" />
+    <Project Path="Blazor.BFF.Yarp.CertificateAuth/Server/Blazor.BFF.Yarp.CertificateAuth.Server.csproj" />
+    <Project Path="Blazor.BFF.Yarp.CertificateAuth/Shared/Blazor.BFF.Yarp.CertificateAuth.Shared.csproj" />
+  </Folder>
+  <Folder Name="/ClientCredentials/">
+    <Project Path="ClientCredentialsFlow/GrpcApi/GrpcApi.csproj" />
+    <Project Path="ClientCredentialsFlow/GrpcAppClientConsole/GrpcAppClientConsole.csproj" />
+  </Folder>
+  <Folder Name="/_dev/">
+    <File Path=".github/workflows/dotnet.yml" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="IdentityProvider/IdentityProvider.csproj" />
+  <Project Path="ResourceServer/ResourceServer.csproj" />
+</Solution>
