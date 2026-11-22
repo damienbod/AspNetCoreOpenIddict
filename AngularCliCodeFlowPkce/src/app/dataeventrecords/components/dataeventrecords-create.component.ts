@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { OidcSecurityService, ConfigAuthenticatedResult, AuthenticatedResult } from 'angular-auth-oidc-client';
@@ -9,6 +9,7 @@ import { DataEventRecord } from '../models/DataEventRecord';
 @Component({
     selector: 'app-dataeventrecords-create',
     templateUrl: 'dataeventrecords-create.component.html',
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 

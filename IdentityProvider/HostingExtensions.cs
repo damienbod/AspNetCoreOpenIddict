@@ -132,7 +132,8 @@ internal static class HostingExtensions
             })
             .AddOpenIdConnect("EntraID", "EntraID", oidcOptions =>
             {
-                oidcOptions.SignInScheme = "entraidcookie";
+                oidcOptions.SignInScheme = IdentityConstants.ExternalScheme;
+                oidcOptions.CallbackPath = "/signin-oidc-entraid";
                 oidcOptions.Scope.Add(OpenIdConnectScope.OpenIdProfile);
                 oidcOptions.Scope.Add("user.read");
                 oidcOptions.Scope.Add(OpenIdConnectScope.OfflineAccess);

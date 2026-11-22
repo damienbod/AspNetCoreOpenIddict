@@ -30,8 +30,17 @@ Add-Migration "InitOpenIddict" -c ApplicationDbContext
 
 Update-Database -Context ApplicationDbContext
 
+### Entra ID external login
+
+Configure `AzureAd:TenantId`, `AzureAd:ClientId`, and `AzureAd:ClientSecret` using user secrets for development or a secure configuration provider for deployment.
+
+In the Entra app registration, add the **Web** redirect URI `https://localhost:44395/signin-oidc-entraid` for the IdentityProvider launch profile. For deployment, use the public IdentityProvider origin with the same callback path. Keycloak continues to use `/signin-oidc`.
+
+Each OpenID Connect provider needs a different callback path; otherwise the wrong handler can receive the response and fail with `Unable to unprotect the message.State`. Both providers use ASP.NET Core Identity's external cookie for the external login flow. After changing the redirect URI, restart the application and start a fresh login rather than reusing an old callback URL.
+
 ## History
 
+- 2026-11-22 .NET 11
 - 2026-05-14 Updated packages
 - 2026-03-15 Updated .NET 10
 - 2026-02-24 Updated .NET 10, updated passkeys in OpenIddict server, Angular 21.1.5
